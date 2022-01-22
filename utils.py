@@ -81,3 +81,17 @@ def _prepare_training_data_helper(args, tokenizer, df, train_ids):
         sample["input_labels"] = input_labels
         training_samples.append(sample)
     return training_samples
+
+def prepare_training_data(df, tokenizer, args, num_jobs):
+    training_samples = []
+    train_ids = df["id"].unique()
+
+    train_ids_splits = np.array_split(train_ids, num_jobs)
+
+    results = Parallel(n_jobs=num_jobs, backend="multiprocessing")(
+        delayed(_prepare_training_data_helper)(args, tokenizer, df, idx) for idx in train_ids_splits
+    )
+    for result in results:
+        training_samples.extend(result)
+
+    return training_samples
