@@ -95,3 +95,19 @@ def prepare_training_data(df, tokenizer, args, num_jobs):
         training_samples.extend(result)
 
     return training_samples
+
+def calc_overlap(row):
+    """
+    Calculates the overlap between prediction and
+    ground truth and overlap percentages used for determining
+    true positives.
+    """
+    set_pred = set(row.predictionstring_pred.split(" "))
+    set_gt = set(row.predictionstring_gt.split(" "))
+    # Length of each and intersection
+    len_gt = len(set_gt)
+    len_pred = len(set_pred)
+    inter = len(set_gt.intersection(set_pred))
+    overlap_1 = inter / len_gt
+    overlap_2 = inter / len_pred
+    return [overlap_1, overlap_2]
