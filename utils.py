@@ -168,3 +168,15 @@ def score_feedback_comp_micro(pred_df, gt_df):
     # calc microf1
     my_f1_score = TP / (TP + 0.5 * (FP + FN))
     return my_f1_score
+
+def score_feedback_comp(pred_df, gt_df, return_class_scores=False):
+    class_scores = {}
+    pred_df = pred_df[["id", "class", "predictionstring"]].reset_index(drop=True).copy()
+    for discourse_type, gt_subset in gt_df.groupby("discourse_type"):
+        pred_subset = pred_df.loc[pred_df["class"] == discourse_type].reset_index(drop=True).copy()
+        class_score = score_feedback_comp_micro(pred_subset, gt_subset)
+        class_scores[discourse_type] = class_score
+    f1 = np.mean([v for v in class_scores.values()])
+    if return_class_scores:
+        return f1, class_scores
+    return f1
