@@ -180,3 +180,29 @@ def score_feedback_comp(pred_df, gt_df, return_class_scores=False):
     if return_class_scores:
         return f1, class_scores
     return f1
+
+class FeedbackDatasetValid:
+    def __init__(self, samples, max_len, tokenizer):
+        self.samples = samples
+        self.max_len = max_len
+        self.tokenizer = tokenizer
+        self.length = len(samples)
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        input_ids = self.samples[idx]["input_ids"]
+        input_ids = [self.tokenizer.cls_token_id] + input_ids
+
+        if len(input_ids) > self.max_len - 1:
+            input_ids = input_ids[: self.max_len - 1]
+
+        # add end token id to the input_ids
+        input_ids = input_ids + [self.tokenizer.sep_token_id]
+        attention_mask = [1] * len(input_ids)
+
+        return {
+            "ids": input_ids,
+            "mask": attention_mask,
+        }
