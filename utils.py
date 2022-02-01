@@ -206,3 +206,29 @@ class FeedbackDatasetValid:
             "ids": input_ids,
             "mask": attention_mask,
         }
+
+class Collate:
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+
+    def __call__(self, batch):
+        output = dict()
+        output["ids"] = [sample["ids"] for sample in batch]
+        output["mask"] = [sample["mask"] for sample in batch]
+
+        # calculate max token length of this batch
+        batch_max = max([len(ids) for ids in output["ids"]])
+
+        # add padding
+        if self.tokenizer.padding_side == "right":
+            output["ids"] = [s + (batch_max - len(s)) * [self.tokenizer.pad_token_id] for s in output["ids"]]
+            output["mask"] = [s + (batch_max - len(s)) * [0] for s in output["mask"]]
+        else:
+            output["ids"] = [(batch_max - len(s)) * [self.tokenizer.pad_token_id] + s for s in output["ids"]]
+            output["mask"] = [(batch_max - len(s)) * [0] + s for s in output["mask"]]
+
+        # convert to tensors
+        output["ids"] = torch.tensor(output["ids"], dtype=torch.long)
+        output["mask"] = torch.tensor(output["mask"], dtype=torch.long)
+
+        return output
