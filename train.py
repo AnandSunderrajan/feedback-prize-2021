@@ -26,3 +26,19 @@ def seed_everything(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fold", type=int, required=True)
+    parser.add_argument("--model", type=str, required=True)
+    parser.add_argument("--lr", type=float, required=True)
+    parser.add_argument("--output", type=str, default="../model", required=False)
+    parser.add_argument("--input", type=str, default="../input", required=False)
+    parser.add_argument("--max_len", type=int, default=1024, required=False)
+    parser.add_argument("--batch_size", type=int, default=8, required=False)
+    parser.add_argument("--valid_batch_size", type=int, default=8, required=False)
+    parser.add_argument("--epochs", type=int, default=20, required=False)
+    parser.add_argument("--gradient_checkpointing", type=bool, default=False, required=False)
+    parser.add_argument("--optimizer", type=int, default=32, required=False)
+    parser.add_argument("--accumulation_steps", type=int, default=1, required=False)
+    return parser.parse_args()
