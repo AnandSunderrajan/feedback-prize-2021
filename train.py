@@ -93,3 +93,39 @@ class FeedbackDataset:
             "targets": torch.tensor(input_labels, dtype=torch.long),
         }
 
+class FeedbackModel(tez.Model):
+    def __init__(self,args, model_name, num_train_steps, learning_rate, num_labels, steps_per_epoch):
+        super().__init__()
+        self.args = args
+        self.learning_rate = learning_rate
+        self.model_name = model_name
+        self.num_train_steps = num_train_steps
+        self.num_labels = num_labels
+        self.steps_per_epoch = steps_per_epoch
+        self.step_scheduler_after = "batch"
+
+        hidden_dropout_prob: float = 0.1
+        layer_norm_eps: float = 1e-7
+
+        config = AutoConfig.from_pretrained(model_name)
+
+        config.update(
+            {
+                "output_hidden_states": True,
+                "hidden_dropout_prob": hidden_dropout_prob,
+                "layer_norm_eps": layer_norm_eps,
+                "add_pooling_layer": False,
+                "num_labels": self.num_labels,
+            }
+        )
+        self.transformer = AutoModel.from_pretrained(model_name, config=config)
+        if args.gradient_checkpointing:
+            self.transformer.gradient_checkpointing.enable()
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.dropout1 = nn.Dropout(0.1)
+        self.dropout2 = nn.Dropout(0.2)
+        self.dropout3 = nn.Dropout(0.3)
+        self.dropout4 = nn.Dropout(0.4)
+        self.dropout5 = nn.Dropout(0.5)
+        self.output = nn.Linear(config.hidden_size, self.num_labels)
+
