@@ -129,3 +129,22 @@ class FeedbackModel(tez.Model):
         self.dropout5 = nn.Dropout(0.5)
         self.output = nn.Linear(config.hidden_size, self.num_labels)
 
+    def fetch_optimizer(self):
+        param_optimizer = list(self.named_parameters())
+        no_decay = ["bias", "LayerNorm.bias"]
+        optimizer_parameters = [
+            {
+                "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+                "weight_decay": 0.01,
+            },
+            {
+                "params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+        ]
+        if self.args.optimizer == 32:
+            opt = AdamW(optimizer_parameters, lr=self.learning_rate)
+        else:
+            opt = bnb.optim.Adam8bit(optimizer_parameters, lr=self.learning_rate)
+        return opt
+
