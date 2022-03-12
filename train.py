@@ -148,3 +148,13 @@ class FeedbackModel(tez.Model):
             opt = bnb.optim.Adam8bit(optimizer_parameters, lr=self.learning_rate)
         return opt
 
+    def fetch_scheduler(self):
+        sch = get_cosine_schedule_with_warmup(
+            self.optimizer,
+            num_warmup_steps=int(0.1 * self.num_train_steps),
+            num_training_steps=self.num_train_steps,
+            num_cycles=1,
+            last_epoch=-1,
+        )
+        return sch
+
