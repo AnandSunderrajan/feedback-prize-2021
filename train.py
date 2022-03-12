@@ -158,3 +158,17 @@ class FeedbackModel(tez.Model):
         )
         return sch
 
+    def loss(self, outputs, targets, attention_mask):
+        loss_fct = nn.CrossEntropyLoss()
+
+        active_loss = attention_mask.view(-1) == 1
+        active_logits = outputs.view(-1, self.num_labels)
+        true_labels = targets.view(-1)
+        outputs = active_logits.argmax(dim=-1)
+        idxs = np.where(active_loss.cpu().numpy() == 1)[0]
+        active_logits = active_logits[idxs]
+        true_labels = true_labels[idxs].to(torch.long)
+
+        loss = loss_fct(active_logits, true_labels)
+        return loss
+
