@@ -172,3 +172,12 @@ class FeedbackModel(tez.Model):
         loss = loss_fct(active_logits, true_labels)
         return loss
 
+    def monitor_metrics(self, outputs, targets, attention_mask):
+        active_loss = (attention_mask.view(-1) == 1).cpu().numpy()
+        active_logits = outputs.view(-1, self.num_labels)
+        true_labels = targets.view(-1).cpu().numpy()
+        outputs = active_logits.argmax(dim=-1).cpu().numpy()
+        idxs = np.where(active_loss == 1)[0]
+        f1_score = metrics.f1_score(true_labels[idxs], outputs[idxs], average="macro")
+        return {"f1": f1_score}
+
