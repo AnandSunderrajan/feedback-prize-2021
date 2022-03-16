@@ -181,3 +181,40 @@ class FeedbackModel(tez.Model):
         f1_score = metrics.f1_score(true_labels[idxs], outputs[idxs], average="macro")
         return {"f1": f1_score}
 
+    def forward(self, ids, mask, token_type_ids=None, targets=None):
+
+        if token_type_ids:
+            transformer_out = self.transformer(ids, mask, token_type_ids)
+        else:
+            transformer_out = self.transformer(ids, mask)
+        sequence_output = transformer_out.last_hidden_state
+        sequence_output = self.dropout(sequence_output)
+
+        logits1 = self.output(self.dropout1(sequence_output))
+        logits2 = self.output(self.dropout2(sequence_output))
+        logits3 = self.output(self.dropout3(sequence_output))
+        logits4 = self.output(self.dropout4(sequence_output))
+        logits5 = self.output(self.dropout5(sequence_output))
+
+        logits = (logits1 + logits2 + logits3 + logits4 + logits5) / 5
+        logits = torch.softmax(logits, dim=-1)
+        loss = 0
+
+        if targets is not None:
+            loss1 = self.loss(logits1, targets, attention_mask=mask)
+            loss2 = self.loss(logits2, targets, attention_mask=mask)
+            loss3 = self.loss(logits3, targets, attention_mask=mask)
+            loss4 = self.loss(logits4, targets, attention_mask=mask)
+            loss5 = self.loss(logits5, targets, attention_mask=mask)
+            loss = (loss1 + loss2 + loss3 + loss4 + loss5) / 5
+            f1_1 = self.monitor_metrics(logits1, targets, attention_mask=mask)["f1"]
+            f1_2 = self.monitor_metrics(logits2, targets, attention_mask=mask)["f1"]
+            f1_3 = self.monitor_metrics(logits3, targets, attention_mask=mask)["f1"]
+            f1_4 = self.monitor_metrics(logits4, targets, attention_mask=mask)["f1"]
+            f1_5 = self.monitor_metrics(logits5, targets, attention_mask=mask)["f1"]
+            f1 = (f1_1 + f1_2 + f1_3 + f1_4 + f1_5) / 5
+            metric = {"f1": f1}
+            return logits, loss, metric
+
+        return logits, loss, {}
+
